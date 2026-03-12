@@ -163,6 +163,7 @@
             this.btnXoa.TabIndex = 13;
             this.btnXoa.Text = "Xoa";
             this.btnXoa.UseVisualStyleBackColor = true;
+            
             // 
             // btnLamMoi
             // 

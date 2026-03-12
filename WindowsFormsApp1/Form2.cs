@@ -18,6 +18,15 @@ namespace WindowsFormsApp1
         {
             InitializeComponent();
             this.Load += Form2_Load;
+
+            btnSua.Click += btnSua_Click;         // Nối nút Sửa
+            btnXoa.Click += btnXoa_Click;         // Nối nút Xóa
+            btnLamMoi.Click += btnLamMoi_Click;   // Nối nút Làm mới
+
+            dgvSinhVien.CellClick += dgvSinhVien_CellClick;
+
+            this.FormClosed += Form2_FormClosed;
+
         }
 
         private void LoadData()
@@ -31,19 +40,41 @@ namespace WindowsFormsApp1
         }
 
         // Tạo 1 hàm riêng để chuyên làm nhiệm vụ tải dữ liệu
-        
+
 
         // 1. Nút Thêm
         private void btnThem_Click(object sender, EventArgs e)
         {
             try
             {
+                // 1. Kiểm tra rỗng
+                if (string.IsNullOrWhiteSpace(txtId.Text) || string.IsNullOrWhiteSpace(txtHoTen.Text))
+                {
+                    MessageBox.Show("Vui lòng nhập đủ ID và Họ tên!");
+                    return;
+                }
+
+                // 2. Kiểm tra trùng ID
+                var kiemTraTrung = db.SinhViens.FirstOrDefault(s => s.Id == txtId.Text);
+                if (kiemTraTrung != null)
+                {
+                    MessageBox.Show("Mã Sinh Viên (ID) đã tồn tại, vui lòng nhập ID khác!");
+                    return;
+                }
+
+                // 3. Kiểm tra nhập Điểm có đúng là số không
+                if (!float.TryParse(txtDiem.Text, out float diemKiemTra))
+                {
+                    MessageBox.Show("Điểm phải là một số hợp lệ!");
+                    return;
+                }
+
                 SinhVien sv = new SinhVien();
                 sv.Id = txtId.Text;
                 sv.HoTen = txtHoTen.Text;
                 sv.NgaySinh = dtpNgaySinh.Value;
                 sv.Lop = txtLop.Text;
-                sv.Diem = float.Parse(txtDiem.Text);
+                sv.Diem = diemKiemTra; // Dùng luôn biến đã tryParse thành công
 
                 db.SinhViens.InsertOnSubmit(sv);
                 db.SubmitChanges();
@@ -60,22 +91,35 @@ namespace WindowsFormsApp1
         // 2. Nút Sửa
         private void btnSua_Click(object sender, EventArgs e)
         {
-            // Tìm sinh viên theo ID
-            var sv = db.SinhViens.FirstOrDefault(s => s.Id == txtId.Text);
-            if (sv != null)
+            try
             {
-                sv.HoTen = txtHoTen.Text;
-                sv.NgaySinh = dtpNgaySinh.Value;
-                sv.Lop = txtLop.Text;
-                sv.Diem = float.Parse(txtDiem.Text);
+                var sv = db.SinhViens.FirstOrDefault(s => s.Id == txtId.Text);
+                if (sv != null)
+                {
+                    // Kiểm tra điểm đầu vào
+                    if (!float.TryParse(txtDiem.Text, out float diemKiemTra))
+                    {
+                        MessageBox.Show("Điểm phải là một số hợp lệ!");
+                        return;
+                    }
 
-                db.SubmitChanges();
-                LoadData();
-                MessageBox.Show("Sửa thành công!");
+                    sv.HoTen = txtHoTen.Text;
+                    sv.NgaySinh = dtpNgaySinh.Value;
+                    sv.Lop = txtLop.Text;
+                    sv.Diem = diemKiemTra;
+
+                    db.SubmitChanges();
+                    LoadData();
+                    MessageBox.Show("Sửa thành công!");
+                }
+                else
+                {
+                    MessageBox.Show("Không tìm thấy Sinh viên có ID này!");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                MessageBox.Show("Không tìm thấy Sinh viên có ID này!");
+                MessageBox.Show("Lỗi khi sửa: " + ex.Message);
             }
         }
 
@@ -110,13 +154,25 @@ namespace WindowsFormsApp1
         // Tùy chọn thêm: Click vào dòng trên DataGridView thì dữ liệu nhảy lên Textbox
         private void dgvSinhVien_CellClick(object sender, DataGridViewCellEventArgs e)
         {
+            // Bỏ qua nếu người dùng bấm vào dòng tiêu đề (Header)
             if (e.RowIndex >= 0)
             {
+                // Lấy cái hàng mà người dùng vừa click chuột vào
                 DataGridViewRow row = dgvSinhVien.Rows[e.RowIndex];
+
+                // Đổ dữ liệu từ hàng đó ngược ra Textbox
                 txtId.Text = row.Cells["Id"].Value?.ToString();
                 txtHoTen.Text = row.Cells["HoTen"].Value?.ToString();
+
+                // Kiểm tra và gán ngày sinh (sử dụng DateTime.TryParse để chống lỗi crash)
                 if (row.Cells["NgaySinh"].Value != null)
-                    dtpNgaySinh.Value = Convert.ToDateTime(row.Cells["NgaySinh"].Value);
+                {
+                    if (DateTime.TryParse(row.Cells["NgaySinh"].Value.ToString(), out DateTime parsedDate))
+                    {
+                        dtpNgaySinh.Value = parsedDate;
+                    }
+                }
+
                 txtLop.Text = row.Cells["Lop"].Value?.ToString();
                 txtDiem.Text = row.Cells["Diem"].Value?.ToString();
             }
@@ -128,6 +184,6 @@ namespace WindowsFormsApp1
             Application.Exit();
         }
 
-
+        
     }
 }
