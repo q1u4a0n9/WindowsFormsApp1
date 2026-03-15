@@ -73,13 +73,14 @@ namespace WindowsFormsApp1
                 sv.Id = txtId.Text;
                 sv.HoTen = txtHoTen.Text;
                 sv.NgaySinh = dtpNgaySinh.Value;
-                sv.Lop = txtLop.Text;
+                sv.Lop = cbbLop.Text;
                 sv.Diem = diemKiemTra; // Dùng luôn biến đã tryParse thành công
 
                 db.SinhViens.InsertOnSubmit(sv);
                 db.SubmitChanges();
 
                 LoadData();
+                ClearInputs();
                 MessageBox.Show("Thêm thành công!");
             }
             catch (Exception ex)
@@ -105,10 +106,11 @@ namespace WindowsFormsApp1
 
                     sv.HoTen = txtHoTen.Text;
                     sv.NgaySinh = dtpNgaySinh.Value;
-                    sv.Lop = txtLop.Text;
+                    sv.Lop = cbbLop.Text;
                     sv.Diem = diemKiemTra;
 
                     db.SubmitChanges();
+                    ClearInputs();
                     LoadData();
                     MessageBox.Show("Sửa thành công!");
                 }
@@ -132,6 +134,7 @@ namespace WindowsFormsApp1
                 db.SinhViens.DeleteOnSubmit(sv);
                 db.SubmitChanges();
                 LoadData();
+                ClearInputs();
                 MessageBox.Show("Xóa thành công!");
             }
             else
@@ -145,7 +148,8 @@ namespace WindowsFormsApp1
         {
             txtId.Clear();
             txtHoTen.Clear();
-            txtLop.Clear();
+            cbbLop.SelectedIndex = -1; // Bỏ chọn danh sách xổ xuống
+            cbbLop.Text = "";          // Xóa chữ đang hiển thị trên ô nhập
             txtDiem.Clear();
             dtpNgaySinh.Value = DateTime.Now;
             txtId.Focus();
@@ -173,7 +177,7 @@ namespace WindowsFormsApp1
                     }
                 }
 
-                txtLop.Text = row.Cells["Lop"].Value?.ToString();
+                cbbLop.Text = row.Cells["Lop"].Value?.ToString();
                 txtDiem.Text = row.Cells["Diem"].Value?.ToString();
             }
         }
@@ -184,6 +188,49 @@ namespace WindowsFormsApp1
             Application.Exit();
         }
 
-        
+        private void ClearInputs()
+        {
+            txtId.Clear();
+            txtHoTen.Clear();
+            txtDiem.Clear();
+            cbbLop.SelectedIndex = -1; // Đưa ComboBox về trạng thái trống (chưa chọn gì)
+            cbbLop.Text = "";          // Xóa chữ đang hiển thị
+            dtpNgaySinh.Value = DateTime.Now;
+            txtId.Focus();             // Đưa con trỏ chuột về lại ô ID cho người dùng gõ tiếp
+        }
+
+        private void label6_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btnTimKiem_Click(object sender, EventArgs e)
+        {
+            string tuKhoa = txtTimKiem.Text.Trim().ToLower(); // Cắt dấu cách thừa và chuyển về chữ thường để dễ tìm
+
+            if (string.IsNullOrEmpty(tuKhoa))
+            {
+                // Nếu ô tìm kiếm trống mà bấm nút, thì load lại toàn bộ danh sách
+                LoadData();
+            }
+            else
+            {
+                // LINQ tìm kiếm: Nếu Mã chứa từ khóa HOẶC Tên chứa từ khóa HOẶC Lớp chứa từ khóa
+                var ketQua = db.SinhViens.Where(s =>
+                                s.Id.ToLower().Contains(tuKhoa) ||
+                                s.HoTen.ToLower().Contains(tuKhoa) ||
+                                s.Lop.ToLower().Contains(tuKhoa)
+                             ).ToList();
+
+                // Đổ dữ liệu tìm được lên DataGridView
+                dgvSinhVien.DataSource = ketQua;
+
+                // Tùy chọn: Thông báo nếu không tìm thấy ai
+                if (ketQua.Count == 0)
+                {
+                    MessageBox.Show("Không tìm thấy kết quả nào phù hợp!", "Thông báo");
+                }
+            }
+        }
     }
 }
