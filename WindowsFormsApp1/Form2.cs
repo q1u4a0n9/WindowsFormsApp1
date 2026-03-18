@@ -25,9 +25,21 @@ namespace WindowsFormsApp1
 
             dgvSinhVien.CellClick += dgvSinhVien_CellClick;
 
+            dgvLopHoc.CellClick += dgvLopHoc_CellClick;
+            
+  
+           
+
             this.FormClosed += Form2_FormClosed;
 
         }
+
+        private void DgvLopHoc_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+
+        }
+
+
 
         private void LoadData()
         {
@@ -36,10 +48,16 @@ namespace WindowsFormsApp1
 
         private void Form2_Load(object sender, EventArgs e)
         {
-            LoadData(); // Vừa vào form là gọi hàm này luôn
+
+            LoadData();          // Tải danh sách Sinh viên (Tab 1)
+            LoadDataLop();       // Tải danh sách Lớp (Tab 2)
+            LoadComboBoxLop();   // Đổ danh sách lớp vào cái ComboBox ở Tab 1
         }
 
         // Tạo 1 hàm riêng để chuyên làm nhiệm vụ tải dữ liệu
+
+        //code cho Tab Sinh Vien
+
 
 
         // 1. Nút Thêm
@@ -70,6 +88,8 @@ namespace WindowsFormsApp1
                 }
 
                 SinhVien sv = new SinhVien();
+                // Nếu nút Nam được tích thì lưu chữ "Nam", ngược lại lưu chữ "Nữ"
+                sv.GioiTinh = radNam.Checked ? "Nam" : "Nữ";
                 sv.Id = txtId.Text;
                 sv.HoTen = txtHoTen.Text;
                 sv.NgaySinh = dtpNgaySinh.Value;
@@ -179,6 +199,21 @@ namespace WindowsFormsApp1
 
                 cbbLop.Text = row.Cells["Lop"].Value?.ToString();
                 txtDiem.Text = row.Cells["Diem"].Value?.ToString();
+
+                // Thêm đoạn này vào dưới cùng của hàm CellClick
+                if (row.Cells["GioiTinh"].Value != null)
+                {
+                    string gt = row.Cells["GioiTinh"].Value.ToString();
+                    if (gt == "Nam")
+                    {
+                        radNam.Checked = true;
+                    }
+                    else if (gt == "Nữ")
+                    {
+                        radNu.Checked = true;
+                    }
+                }
+
             }
         }
 
@@ -190,6 +225,7 @@ namespace WindowsFormsApp1
 
         private void ClearInputs()
         {
+            radNam.Checked = true;
             txtId.Clear();
             txtHoTen.Clear();
             txtDiem.Clear();
@@ -197,11 +233,6 @@ namespace WindowsFormsApp1
             cbbLop.Text = "";          // Xóa chữ đang hiển thị
             dtpNgaySinh.Value = DateTime.Now;
             txtId.Focus();             // Đưa con trỏ chuột về lại ô ID cho người dùng gõ tiếp
-        }
-
-        private void label6_Click(object sender, EventArgs e)
-        {
-
         }
 
         private void btnTimKiem_Click(object sender, EventArgs e)
@@ -224,6 +255,152 @@ namespace WindowsFormsApp1
 
                 // Đổ dữ liệu tìm được lên DataGridView
                 dgvSinhVien.DataSource = ketQua;
+
+                // Tùy chọn: Thông báo nếu không tìm thấy ai
+                if (ketQua.Count == 0)
+                {
+                    MessageBox.Show("Không tìm thấy kết quả nào phù hợp!", "Thông báo");
+                }
+            }
+        }
+        //End code Tab SinhVien
+
+
+        //code cho Tab Lophoc
+        // ==========================================================
+        // KHU VỰC CODE DÀNH RIÊNG CHO TAB 2 (QUẢN LÝ LỚP HỌC)
+        // ==========================================================
+
+        private void LoadDataLop()
+        {
+            dgvLopHoc.DataSource = db.LopHocs.ToList();
+        }
+
+        private void ClearInputsLop()
+        {
+            txtMaLop.Clear();
+            txtTenLop.Clear();
+            txtMaLop.Focus();
+        }
+
+        // Hàm này cực kỳ quan trọng: Lấy danh sách lớp đổ vào ComboBox ở Tab 1
+        private void LoadComboBoxLop()
+        {
+            cbbLop.DataSource = db.LopHocs.ToList();
+            cbbLop.DisplayMember = "TenLop"; // Hiện tên lớp cho người dùng chọn
+            cbbLop.ValueMember = "MaLop";    // Ngầm lưu mã lớp ở dưới
+            cbbLop.SelectedIndex = -1;       // Để trống lúc ban đầu
+        }
+
+        // 1. Nút Thêm Lớp
+        private void btnThemLop_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(txtMaLop.Text) || string.IsNullOrWhiteSpace(txtTenLop.Text))
+                {
+                    MessageBox.Show("Vui lòng nhập đủ Mã lớp và Tên lớp!"); return;
+                }
+
+                var check = db.LopHocs.FirstOrDefault(l => l.MaLop == txtMaLop.Text);
+                if (check != null)
+                {
+                    MessageBox.Show("Mã lớp này đã tồn tại!"); return;
+                }
+
+                LopHoc lop = new LopHoc();
+                lop.MaLop = txtMaLop.Text;
+                lop.TenLop = txtTenLop.Text;
+
+                db.LopHocs.InsertOnSubmit(lop);
+                db.SubmitChanges();
+
+                LoadDataLop();
+                LoadComboBoxLop(); // Cập nhật lại ComboBox bên Tab 1
+                ClearInputsLop();
+                MessageBox.Show("Thêm lớp thành công!");
+            }
+            catch (Exception ex) { MessageBox.Show("Lỗi: " + ex.Message); }
+        }
+
+        // 2. Nút Sửa Lớp
+        private void btnSuaLop_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var lop = db.LopHocs.FirstOrDefault(l => l.MaLop == txtMaLop.Text);
+                if (lop != null)
+                {
+                    lop.TenLop = txtTenLop.Text; // Thường người ta chỉ sửa Tên lớp, không cho sửa Mã
+                    db.SubmitChanges();
+
+                    LoadDataLop();
+                    LoadComboBoxLop(); // Cập nhật lại ComboBox bên Tab 1
+                    ClearInputsLop();
+                    MessageBox.Show("Sửa lớp thành công!");
+                }
+                else { MessageBox.Show("Không tìm thấy lớp để sửa!"); }
+            }
+            catch (Exception ex) { MessageBox.Show("Lỗi: " + ex.Message); }
+        }
+
+        // 3. Nút Xóa Lớp
+        private void btnXoaLop_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var lop = db.LopHocs.FirstOrDefault(l => l.MaLop == txtMaLop.Text);
+                if (lop != null)
+                {
+                    db.LopHocs.DeleteOnSubmit(lop);
+                    db.SubmitChanges();
+
+                    LoadDataLop();
+                    LoadComboBoxLop(); // Cập nhật lại ComboBox bên Tab 1
+                    ClearInputsLop();
+                    MessageBox.Show("Xóa lớp thành công!");
+                }
+                else { MessageBox.Show("Không tìm thấy lớp để xóa!"); }
+            }
+            catch (Exception ex) { MessageBox.Show("Lỗi: " + ex.Message); }
+        }
+
+        // 4. Nút Làm mới Lớp
+        private void btnLamMoiLop_Click(object sender, EventArgs e)
+        {
+            ClearInputsLop();
+        }
+
+        // 5. Click vào DataGridView Lớp Học
+        private void dgvLopHoc_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex >= 0)
+            {
+                DataGridViewRow row = dgvLopHoc.Rows[e.RowIndex];
+                txtMaLop.Text = row.Cells["MaLop"].Value?.ToString();
+                txtTenLop.Text = row.Cells["TenLop"].Value?.ToString();
+            }
+        }
+
+        private void btnTimKiemLop_Click(object sender, EventArgs e)
+        {
+            string tuKhoa = txtTimKiemLop.Text.Trim().ToLower(); // Cắt dấu cách thừa và chuyển về chữ thường để dễ tìm
+
+            if (string.IsNullOrEmpty(tuKhoa))
+            {
+                // Nếu ô tìm kiếm trống mà bấm nút, thì load lại toàn bộ danh sách
+                LoadDataLop();
+            }
+            else
+            {
+                // LINQ tìm kiếm: Nếu Mã chứa từ khóa HOẶC Tên chứa từ khóa HOẶC Lớp chứa từ khóa
+                var ketQua = db.LopHocs.Where(s =>
+                                s.MaLop.ToLower().Contains(tuKhoa) ||
+                                s.TenLop.ToLower().Contains(tuKhoa) 
+                             ).ToList();
+
+                // Đổ dữ liệu tìm được lên DataGridView
+                dgvLopHoc.DataSource = ketQua;
 
                 // Tùy chọn: Thông báo nếu không tìm thấy ai
                 if (ketQua.Count == 0)

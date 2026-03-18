@@ -33,5 +33,16 @@ namespace WindowsFormsApp1.Properties {
                 return ((string)(this["QuanLySinhVien_DBConnectionString"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.ConnectionString)]
+        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=M536\\SQLEXPRESS;Initial Catalog=qlsv;Integrated Security=True;Connect" +
+            " Timeout=30;Encrypt=True;TrustServerCertificate=True")]
+        public string qlsvConnectionString {
+            get {
+                return ((string)(this["qlsvConnectionString"]));
+            }
+        }
     }
 }

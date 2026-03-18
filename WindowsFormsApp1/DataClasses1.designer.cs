@@ -22,7 +22,7 @@ namespace WindowsFormsApp1
 	using System;
 	
 	
-	[global::System.Data.Linq.Mapping.DatabaseAttribute(Name="QuanLySinhVien_DB")]
+	[global::System.Data.Linq.Mapping.DatabaseAttribute(Name="qlsv")]
 	public partial class DataClasses1DataContext : System.Data.Linq.DataContext
 	{
 		
@@ -33,10 +33,13 @@ namespace WindowsFormsApp1
     partial void InsertSinhVien(SinhVien instance);
     partial void UpdateSinhVien(SinhVien instance);
     partial void DeleteSinhVien(SinhVien instance);
+    partial void InsertLopHoc(LopHoc instance);
+    partial void UpdateLopHoc(LopHoc instance);
+    partial void DeleteLopHoc(LopHoc instance);
     #endregion
 		
 		public DataClasses1DataContext() : 
-				base(global::WindowsFormsApp1.Properties.Settings.Default.QuanLySinhVien_DBConnectionString, mappingSource)
+				base(global::WindowsFormsApp1.Properties.Settings.Default.qlsvConnectionString, mappingSource)
 		{
 			OnCreated();
 		}
@@ -72,6 +75,14 @@ namespace WindowsFormsApp1
 				return this.GetTable<SinhVien>();
 			}
 		}
+		
+		public System.Data.Linq.Table<LopHoc> LopHocs
+		{
+			get
+			{
+				return this.GetTable<LopHoc>();
+			}
+		}
 	}
 	
 	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.SinhVien")]
@@ -90,6 +101,8 @@ namespace WindowsFormsApp1
 		
 		private System.Nullable<double> _Diem;
 		
+		private string _GioiTinh;
+		
     #region Extensibility Method Definitions
     partial void OnLoaded();
     partial void OnValidate(System.Data.Linq.ChangeAction action);
@@ -104,6 +117,8 @@ namespace WindowsFormsApp1
     partial void OnLopChanged();
     partial void OnDiemChanging(System.Nullable<double> value);
     partial void OnDiemChanged();
+    partial void OnGioiTinhChanging(string value);
+    partial void OnGioiTinhChanged();
     #endregion
 		
 		public SinhVien()
@@ -207,6 +222,112 @@ namespace WindowsFormsApp1
 					this._Diem = value;
 					this.SendPropertyChanged("Diem");
 					this.OnDiemChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_GioiTinh", DbType="NVarChar(10)")]
+		public string GioiTinh
+		{
+			get
+			{
+				return this._GioiTinh;
+			}
+			set
+			{
+				if ((this._GioiTinh != value))
+				{
+					this.OnGioiTinhChanging(value);
+					this.SendPropertyChanging();
+					this._GioiTinh = value;
+					this.SendPropertyChanged("GioiTinh");
+					this.OnGioiTinhChanged();
+				}
+			}
+		}
+		
+		public event PropertyChangingEventHandler PropertyChanging;
+		
+		public event PropertyChangedEventHandler PropertyChanged;
+		
+		protected virtual void SendPropertyChanging()
+		{
+			if ((this.PropertyChanging != null))
+			{
+				this.PropertyChanging(this, emptyChangingEventArgs);
+			}
+		}
+		
+		protected virtual void SendPropertyChanged(String propertyName)
+		{
+			if ((this.PropertyChanged != null))
+			{
+				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+			}
+		}
+	}
+	
+	[global::System.Data.Linq.Mapping.TableAttribute(Name="dbo.LopHoc")]
+	public partial class LopHoc : INotifyPropertyChanging, INotifyPropertyChanged
+	{
+		
+		private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
+		
+		private string _MaLop;
+		
+		private string _TenLop;
+		
+    #region Extensibility Method Definitions
+    partial void OnLoaded();
+    partial void OnValidate(System.Data.Linq.ChangeAction action);
+    partial void OnCreated();
+    partial void OnMaLopChanging(string value);
+    partial void OnMaLopChanged();
+    partial void OnTenLopChanging(string value);
+    partial void OnTenLopChanged();
+    #endregion
+		
+		public LopHoc()
+		{
+			OnCreated();
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_MaLop", DbType="NVarChar(50) NOT NULL", CanBeNull=false, IsPrimaryKey=true)]
+		public string MaLop
+		{
+			get
+			{
+				return this._MaLop;
+			}
+			set
+			{
+				if ((this._MaLop != value))
+				{
+					this.OnMaLopChanging(value);
+					this.SendPropertyChanging();
+					this._MaLop = value;
+					this.SendPropertyChanged("MaLop");
+					this.OnMaLopChanged();
+				}
+			}
+		}
+		
+		[global::System.Data.Linq.Mapping.ColumnAttribute(Storage="_TenLop", DbType="NVarChar(100)")]
+		public string TenLop
+		{
+			get
+			{
+				return this._TenLop;
+			}
+			set
+			{
+				if ((this._TenLop != value))
+				{
+					this.OnTenLopChanging(value);
+					this.SendPropertyChanging();
+					this._TenLop = value;
+					this.SendPropertyChanged("TenLop");
+					this.OnTenLopChanged();
 				}
 			}
 		}
