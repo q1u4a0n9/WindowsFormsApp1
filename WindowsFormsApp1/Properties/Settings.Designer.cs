@@ -44,5 +44,16 @@ namespace WindowsFormsApp1.Properties {
                 return ((string)(this["qlsvConnectionString"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.ConnectionString)]
+        [global::System.Configuration.DefaultSettingValueAttribute("Data Source=LAPTOP-H3EJFTB6\\SQLEXPRESS01;Initial Catalog=qlsv;Integrated Security" +
+            "=True;Connect Timeout=30;Encrypt=True;TrustServerCertificate=True")]
+        public string qlsvConnectionString1 {
+            get {
+                return ((string)(this["qlsvConnectionString1"]));
+            }
+        }
     }
 }

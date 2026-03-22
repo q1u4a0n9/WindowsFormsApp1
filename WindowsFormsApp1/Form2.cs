@@ -14,6 +14,10 @@ namespace WindowsFormsApp1
     public partial class Form2 : Form
     {
         DataClasses1DataContext db = new DataClasses1DataContext();
+
+        int trangHienTai = 1;
+        int soDongTrenTrang = 10; // Cứ 5 sinh viên thì qua trang mới (bạn có thể đổi thành 10, 20 tùy ý)
+        int tongSoTrang = 0;
         public Form2()
         {
             InitializeComponent();
@@ -43,7 +47,38 @@ namespace WindowsFormsApp1
 
         private void LoadData()
         {
-            dgvSinhVien.DataSource = db.SinhViens.ToList();
+            // 1. Đếm xem có tổng cộng bao nhiêu sinh viên trong Database
+            int tongSoDong = db.SinhViens.Count();
+
+            // 2. Tính tổng số trang (Ví dụ: 12 dòng / 5 = 2.4 -> Làm tròn lên là 3 trang)
+            tongSoTrang = (int)Math.Ceiling((double)tongSoDong / soDongTrenTrang);
+
+            // Chống lỗi: Nếu xóa hết sinh viên ở trang cuối thì lùi về trang trước đó
+            if (trangHienTai > tongSoTrang && tongSoTrang > 0) trangHienTai = tongSoTrang;
+            if (trangHienTai == 0 && tongSoTrang > 0) trangHienTai = 1;
+
+            // 3. Sức mạnh của LINQ (Skip và Take)
+            var danhSachPhanTrang = db.SinhViens
+                                        .Skip((trangHienTai - 1) * soDongTrenTrang)
+                                        .Take(soDongTrenTrang)
+                                        .ToList();
+
+            // 4. Đổ dữ liệu đã cắt xén lên lưới
+            dgvSinhVien.DataSource = danhSachPhanTrang;
+
+            // 5. Hiện thông số trang và Bật/Tắt các nút bấm cho logic
+            if (tongSoTrang > 0)
+            {
+                lblTrang.Text = $"Trang {trangHienTai} / {tongSoTrang}";
+            }
+            else
+            {
+                lblTrang.Text = "Không có dữ liệu";
+            }
+
+            // Đang ở trang 1 thì tắt nút Trước, đang ở trang cuối thì tắt nút Sau
+            btnTrangTruoc.Enabled = (trangHienTai > 1);
+            btnTrangSau.Enabled = (trangHienTai < tongSoTrang);
         }
 
         private void Form2_Load(object sender, EventArgs e)
@@ -55,6 +90,25 @@ namespace WindowsFormsApp1
         }
 
         // Tạo 1 hàm riêng để chuyên làm nhiệm vụ tải dữ liệu
+
+        private void btnTrangTruoc_Click(object sender, EventArgs e)
+        {
+            if (trangHienTai > 1)
+            {
+                trangHienTai--; // Lùi lại 1 trang
+                LoadData();     // Tải lại lưới
+            }
+        }
+
+        private void btnTrangSau_Click(object sender, EventArgs e)
+        {
+            if (trangHienTai < tongSoTrang)
+            {
+                trangHienTai++; // Tiến tới 1 trang
+                LoadData();     // Tải lại lưới
+            }
+        }
+
 
         //code cho Tab Sinh Vien
 
@@ -93,7 +147,7 @@ namespace WindowsFormsApp1
                 sv.Id = txtId.Text;
                 sv.HoTen = txtHoTen.Text;
                 sv.NgaySinh = dtpNgaySinh.Value;
-                sv.Lop = cbbLop.Text;
+                sv.Lop = cbbLop.SelectedValue.ToString();
                 sv.Diem = diemKiemTra; // Dùng luôn biến đã tryParse thành công
 
                 db.SinhViens.InsertOnSubmit(sv);
@@ -126,7 +180,7 @@ namespace WindowsFormsApp1
 
                     sv.HoTen = txtHoTen.Text;
                     sv.NgaySinh = dtpNgaySinh.Value;
-                    sv.Lop = cbbLop.Text;
+                    sv.Lop = cbbLop.SelectedValue.ToString();
                     sv.Diem = diemKiemTra;
 
                     db.SubmitChanges();
@@ -263,6 +317,9 @@ namespace WindowsFormsApp1
                 }
             }
         }
+
+
+
         //End code Tab SinhVien
 
 
@@ -408,6 +465,37 @@ namespace WindowsFormsApp1
                     MessageBox.Show("Không tìm thấy kết quả nào phù hợp!", "Thông báo");
                 }
             }
+        }
+
+        private void btnXemDSSV_Click(object sender, EventArgs e)
+        {
+            // 1. Kiểm tra xem người dùng đã bấm chọn lớp nào trên lưới chưa
+            // (Dựa vào ô txtMaLop xem có trống không)
+            if (string.IsNullOrWhiteSpace(txtMaLop.Text))
+            {
+                MessageBox.Show("Vui lòng click chọn một Lớp trên lưới để xem danh sách!", "Thông báo");
+                return;
+            }
+
+            // 2. Lấy mã lớp và tên lớp đang hiển thị ở Textbox
+            string maLop = txtMaLop.Text;
+            string tenLop = txtTenLop.Text;
+
+            // 3. Gọi Form 3 ra, NÉM mã lớp và tên lớp sang cho nó qua dấu ngoặc tròn
+            Form3 f3 = new Form3(maLop, tenLop);
+
+            // 4. Mở Form 3 lên dưới dạng Popup
+            f3.ShowDialog();
+        }
+
+        private void Form2_Load_1(object sender, EventArgs e)
+        {
+
+        }
+
+        private void tabPage1_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }
